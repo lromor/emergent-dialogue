@@ -1,12 +1,24 @@
 # coding: utf-8
 
-"""Image with shapes generation module.
-
-This module contains simple classes
+"""This module contains simple classes
 to generate an image containing a set of
 simple shapes of different size and position.
-The images are subdivided in a grid where
+The image is subdivided into a grid where
 each cell is the basic positional unit.
+
+Example:
+
+```
+from signal.dataset.shapes import ShapesImage
+
+image = ShapesImage.create_random_image(nshapes=4, seed=None)
+
+# print the generated image in the terminal
+print(str(image))
+
+# return the symbolic representation
+data = image.to_symb()
+```
 """
 
 from enum import Enum
@@ -93,6 +105,16 @@ class ShapesImage():
     @classmethod
     def create_random_image(cls, grid_size: Tuple[int, int]=(3, 3),
                             nshapes: int=1, seed: Optional[int] = None):
+        """Takes care of generating a random image
+        given the provided arguments.
+
+        Args:
+            - grid_size: Size of the image
+            - nshapes: Number of shapes to be placed in the image.
+            - seed: Seed for the internal PRNG.
+        Raises:
+            - RuntimeError: If nshapes > grid_size[0] * grid_size[1].
+        """
         w, h = grid_size
         ncells = w * h
 
