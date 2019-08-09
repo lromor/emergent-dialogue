@@ -24,8 +24,8 @@ class ConfigParser(configargparse.ArgParser):
         """Returns the configuration object that specifies the
         supported options for the training.
         """
-        p = cls(default_config_files=['config.ini'])
-        p.add('-c', '--config', required=True, is_config_file=True,
+        p = cls()
+        p.add('-c', '--config', required=False, is_config_file=True,
               help='Config file to be used.')
         p.add('--max-epochs', type=int, default=10000)
         p.add('--embedding-size', type=int, metavar="I",
