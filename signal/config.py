@@ -24,6 +24,7 @@ class ConfigParser(configargparse.ArgParser):
     def create(cls):
         """Returns the configuration object that specifies the
         supported options for the training.
+        NOTE: Never use _ (underscore) in argument names. This will break easy loading from file.
         """
         p = cls(default_config_files=['config.yaml'])
         p.add('-c', '--config', is_config_file=True,
