@@ -17,7 +17,8 @@ image = ShapesImage.create_random(nshapes=4)
 # print the generated image in the terminal
 print(str(image))
 
-# return the symbolic representation
+# return the symbolic representation (ndarray)
+# with 3 channels
 data = image.to_symb()
 ```
 """
@@ -28,6 +29,7 @@ from typing import List, Tuple, Optional
 
 import numpy as np
 from numpy.random import RandomState
+import torch
 
 from .base import RefGameDatasetBase
 
@@ -108,7 +110,7 @@ class ShapesImage():
 
     @classmethod
     def create_random(cls, grid_size: Tuple[int, int]=(3, 3),
-                      nshapes: int=1, rng: Optional[RandomState] = None):
+                      nshapes: int=1, rng: Optional[RandomState]=None):
         """Takes care of generating a random image
         given the provided arguments.
 

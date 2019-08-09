@@ -26,7 +26,7 @@ class ConfigParser(configargparse.ArgParser):
         supported options for the training.
         NOTE: Never use _ (underscore) in argument names. This will break easy loading from file.
         """
-        p = cls(default_config_files=['config.yaml'])
+        p = cls()
         p.add('-c', '--config', is_config_file=True,
               help='Config file to be used.')
         p.add('--max-epochs', type=int, default=10000)

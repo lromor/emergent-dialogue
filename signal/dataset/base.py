@@ -8,17 +8,18 @@ from abc import ABC
 from abc import abstractmethod
 from torch.utils.data import DataLoader
 from torch.utils.data import IterableDataset
+from torch.utils.data import Sampler
 from numpy.random import RandomState
 
 
-class RefGameDatasetBase(ABC, IterableDataset):
+class RefGameDatasetBase(IterableDataset, ABC):
     """Base class that defines a referential game dataset.
     This class provides some simple boilerplate to handle
     infinite datasets and save pre-generated ones. All at the cost
     of implementing _generate_sample method."""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._samples = None
         self._rng = RandomState(None)
 
@@ -70,8 +71,8 @@ class RefGameDatasetBase(ABC, IterableDataset):
     def __getitem__(self, key):
         if self._samples is not None:
             return self._samples[key]
-        raise RuntimeError("The current dataset instance is not a "
-                           "pregenerated dataset.")
+        raise TypeError("The current dataset instance is not a "
+                        "pregenerated dataset hence it's not subscriptable.")
 
     def __iter__(self):
         """Returns an iterator that let's you lazily loop through the dataset.
@@ -90,3 +91,32 @@ class RefGameDatasetBase(ABC, IterableDataset):
                 yield self._generate_sample()
 
         return data_gen()
+
+
+class RefGameSamplerBase(Sampler):
+
+    def __init__(self, ndistractors):
+        self.k = ndistractors
+
+    def __iter__(self):
+        indices = []
+
+        if self.shuffle:
+            targets = torch.randperm(self.n).tolist()
+        else:
+            targets = list(range(self.n))
+
+        for t in targets:
+            arr = np.zeros(self.k + 1, dtype=int)  # distractors + target
+            arr[0] = t
+            distractors = random.sample(range(self.n), self.k)
+            while t in distractors:
+                distractors = random.sample(range(self.n), self.k)
+            arr[1:] = np.array(distractors)
+
+            indices.append(arr)
+
+        return iter(indices)
+
+    def __len__(self):
+        return self.n
