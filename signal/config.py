@@ -9,6 +9,7 @@ class Config(argparse.Namespace):
         s = '\nConfig\n'
         s += '---------------------------------------\n'
         for key, value in vars(self).items():
+            key = key.replace('_', '-')
             s += f'{key}: {value}\n'
         s += '---------------------------------------\n'
         return s
@@ -23,6 +24,7 @@ class ConfigParser(configargparse.ArgParser):
     def create(cls):
         """Returns the configuration object that specifies the
         supported options for the training.
+        NOTE: Never use _ (underscore) in argument names. This will break easy loading from file.
         """
         p = cls()
         p.add('-c', '--config', is_config_file=True,
