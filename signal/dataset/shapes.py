@@ -9,9 +9,10 @@ each cell is the basic positional unit.
 Example:
 
 ```
+from numpy.random import RandomState
 from signal.dataset.shapes import ShapesImage
 
-image = ShapesImage.create_random_image(nshapes=4, seed=None)
+image = ShapesImage.create_random(nshapes=4)
 
 # print the generated image in the terminal
 print(str(image))
@@ -26,6 +27,9 @@ from enum import IntEnum
 from typing import List, Tuple, Optional
 
 import numpy as np
+from numpy.random import RandomState
+
+from .base import RefGameDatasetBase
 
 
 class Shape(Enum):
@@ -103,8 +107,8 @@ class ShapesImage():
         return self._data.shape
 
     @classmethod
-    def create_random_image(cls, grid_size: Tuple[int, int]=(3, 3),
-                            nshapes: int=1, seed: Optional[int] = None):
+    def create_random(cls, grid_size: Tuple[int, int]=(3, 3),
+                      nshapes: int=1, rng: Optional[RandomState] = None):
         """Takes care of generating a random image
         given the provided arguments.
 
@@ -118,7 +122,7 @@ class ShapesImage():
         w, h = grid_size
         ncells = w * h
 
-        r = np.random.RandomState(seed)
+        r = rng if rng else RandomState()
 
         if nshapes > ncells:
             raise RuntimeError("The number of shapes of is greater than"
@@ -170,11 +174,23 @@ class ShapesImage():
         """Returns a numpy RGB array image"""
         raise NotImplementedError
 
+    @classmethod
+    def from_symb(self, data):
+        self._data = data
+
     def to_symb(self):
         """Return the symbolic representation of the data-point"""
         return self._data
 
 
-if __name__ == "__main__":
-    image = ShapesImage.create_random_image(nshapes=4, seed=None)
-    print(str(image))
+class ShapesImageDataset(RefGameDatasetBase):
+    """Takes care of holding multiple ShapeImages."""
+
+    # Useful for testing in order to switch with different
+    # mock classes.
+    SAMPLE_CLS = ShapesImage
+
+    def _generate_sample(self):
+        """Specialize the sample generation to return the symbolic data"""
+        sample_cls = self.SAMPLE_CLS
+        return sample_cls.create_random(rng=self._rng)
