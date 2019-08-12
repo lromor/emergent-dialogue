@@ -27,7 +27,7 @@ class RefGameDatasetBaseTest(unittest.TestCase):
         self.assertEqual(pre_gen.random_state[1][0], seed,
                          'Seed of RandomState was set incorrectly.')
 
-    def test_iter_eq_pre_gen(self):
+    def test_iter_equal_pre_gen(self):
         size = 10
         seed = 42
 
@@ -55,3 +55,17 @@ class RefGameDatasetBaseTest(unittest.TestCase):
         # Raises TypeError
         with self.assertRaises(TypeError):
             dynamic[5]
+
+    def test_len_only_pre_gen(self):
+        size = 10
+
+        pre_gen = RefGameDatasetBase.pre_generate(size)
+        dynamic = RefGameDatasetBase()
+
+        # No TypeError
+        self.assertEqual(len(pre_gen), size)
+
+        # Raises TypeError
+        with self.assertRaises(TypeError):
+            len(dynamic)
+

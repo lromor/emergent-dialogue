@@ -66,13 +66,16 @@ class RefGameDatasetBase(IterableDataset, ABC):
     def __len__(self):
         if self._samples is not None:
             return len(self._samples)
-        return np.inf
+        else:
+            raise TypeError(
+                'Datasets without pregenerated samples have no/infinite length.')
 
     def __getitem__(self, key):
         if self._samples is not None:
             return self._samples[key]
-        raise TypeError("The current dataset instance is not a "
-                        "pregenerated dataset hence it's not subscriptable.")
+        else:
+            raise TypeError("The current dataset instance is not a "
+                            "pregenerated dataset hence it's not subscriptable.")
 
     def __iter__(self):
         """Returns an iterator that let's you lazily loop through the dataset.
