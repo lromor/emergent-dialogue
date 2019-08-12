@@ -1,5 +1,7 @@
 import unittest
 from unittest.mock import patch
+
+import numpy as np
 from numpy.random import RandomState
 
 from sygnal.dataset.base import RefGameDatasetBase, RefGameSamplerBase
@@ -69,3 +71,27 @@ class RefGameDatasetBaseTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             len(dynamic)
 
+
+class RefGameSamplerBaseTest(unittest.TestCase):
+
+    def test_len(self):
+        fewer_sampler = RefGameSamplerBase(0, nsamples=5)
+        more_sampler = RefGameSamplerBase(0, nsamples=15)
+
+        self.assertEqual(len(fewer_sampler), 5)
+        self.assertEqual(len(more_sampler), 15)
+
+    def test_iter(self):
+        ndistractors = 3
+        nsamples = 100
+
+        sampler = RefGameSamplerBase(ndistractors, nsamples)
+
+        for i, s in enumerate(sampler):
+            self.assertEqual(len(s), ndistractors + 1,
+                             f'Expect sample to have {ndistractors} + 1 values.')
+            self.assertNotIn(s[0], s[1:],
+                             f'Expect distractors to be different from target.' +
+                             f'But found target: {s[0]} and distractors {s[1:]}')
+
+        self.assertEqual(i, nsamples - 1, 'Wrong number of iterations.')

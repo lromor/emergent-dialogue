@@ -6,9 +6,12 @@ to be specialized (inherited).
 
 from abc import ABC
 from abc import abstractmethod
+
 from torch.utils.data import DataLoader
 from torch.utils.data import IterableDataset
 from torch.utils.data import Sampler
+
+import numpy as np
 from numpy.random import RandomState
 
 
@@ -97,9 +100,21 @@ class RefGameDatasetBase(IterableDataset, ABC):
 
 
 class RefGameSamplerBase(Sampler):
+    """Basic sampler that iterates through (shuffled) indicies 
+    and draws disctractors without overlap for each sample.
+    """
 
-    def __init__(self, ndistractors):
-        self.k = ndistractors
+    def __init__(self, ndistractors, nsamples, shuffle=False):
+        """Constructor.
+
+        Args:
+            - ndistractors: number of disctractor indicies for each sample
+            - nsamples: total number of samples to be generated
+            - shuffle: wether to shuffle list
+        """
+        self.ndistractors = ndistractors
+        self.nsamples = nsamples
+        self.shuffle = shuffle
 
     def __iter__(self):
         indices = []
@@ -107,19 +122,23 @@ class RefGameSamplerBase(Sampler):
         if self.shuffle:
             targets = torch.randperm(self.n).tolist()
         else:
-            targets = list(range(self.n))
+            targets = list(range(self.nsamples))
 
         for t in targets:
-            arr = np.zeros(self.k + 1, dtype=int)  # distractors + target
+            # target + distractors
+            arr = np.zeros(self.ndistractors + 1, dtype=int)
             arr[0] = t
-            distractors = random.sample(range(self.n), self.k)
-            while t in distractors:
-                distractors = random.sample(range(self.n), self.k)
-            arr[1:] = np.array(distractors)
+
+            choices = list(range(self.nsamples))
+            choices.remove(t)
+            distractors = np.random.choice(choices,
+                                           size=self.ndistractors,
+                                           replace=False)
+            arr[1:] = distractors
 
             indices.append(arr)
 
         return iter(indices)
 
     def __len__(self):
-        return self.n
+        return self.nsamples
