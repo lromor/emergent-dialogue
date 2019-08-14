@@ -31,7 +31,7 @@ import numpy as np
 from numpy.random import RandomState
 import torch
 
-from .base import RefGameDatasetBase
+from .base import RefGameDatasetAbstractBase
 
 
 class Shape(Enum):
@@ -103,6 +103,9 @@ class ShapesImage():
                 the features channels (shape, color, size)
         """
         self._data = data
+
+    def __eq__(self, target):
+        return np.array_equal(self._data, target._data)
 
     @property
     def shape(self):
@@ -185,8 +188,10 @@ class ShapesImage():
         return self._data
 
 
-class ShapesImageDataset(RefGameDatasetBase):
-    """Takes care of holding multiple ShapeImages."""
+class ShapesImageDataset(RefGameDatasetAbstractBase):
+    """Takes care of holding multiple ShapeImages and provides
+    a data-set facility for PyTorch.
+    """
 
     # Useful for testing in order to switch with different
     # mock classes.

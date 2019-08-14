@@ -15,8 +15,8 @@ import numpy as np
 from numpy.random import RandomState
 
 
-class RefGameDatasetBase(IterableDataset, ABC):
-    """Base class that defines a referential game dataset.
+class RefGameDatasetAbstractBase(IterableDataset, ABC):
+    """Base class that defines a referential game data-set.
     This class provides some simple boilerplate to handle
     infinite datasets and save pre-generated ones. All at the cost
     of implementing _generate_sample method."""
@@ -47,7 +47,7 @@ class RefGameDatasetBase(IterableDataset, ABC):
         (i.e. pickles).
         NOTE(lromor): If necessary we could define pickle classes
         to better handle how to pickle the dataset downstream.
-        For now we don't that huge requirements so we can store
+        For now we don't have any fancy requirement.
         """
         raise NotImplementedError
 
@@ -100,7 +100,7 @@ class RefGameDatasetBase(IterableDataset, ABC):
 
 
 class RefGameSamplerBase(Sampler):
-    """Basic sampler that iterates through (shuffled) indicies 
+    """Basic sampler that iterates through (shuffled) indicies
     and draws disctractors without overlap for each sample.
     """
 
