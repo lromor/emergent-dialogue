@@ -6,14 +6,18 @@ to be specialized (inherited).
 
 from abc import ABC
 from abc import abstractmethod
+import random
+
 from torch.utils.data import DataLoader
 from torch.utils.data import IterableDataset
 from torch.utils.data import Sampler
+
+import numpy as np
 from numpy.random import RandomState
 
 
-class RefGameDatasetBase(IterableDataset, ABC):
-    """Base class that defines a referential game dataset.
+class RefGameDatasetAbstractBase(IterableDataset, ABC):
+    """Base class that defines a referential game data-set.
     This class provides some simple boilerplate to handle
     infinite datasets and save pre-generated ones. All at the cost
     of implementing _generate_sample method."""
@@ -44,7 +48,7 @@ class RefGameDatasetBase(IterableDataset, ABC):
         (i.e. pickles).
         NOTE(lromor): If necessary we could define pickle classes
         to better handle how to pickle the dataset downstream.
-        For now we don't that huge requirements so we can store
+        For now we don't have any fancy requirement.
         """
         raise NotImplementedError
 
@@ -66,13 +70,16 @@ class RefGameDatasetBase(IterableDataset, ABC):
     def __len__(self):
         if self._samples is not None:
             return len(self._samples)
-        return np.inf
+        else:
+            raise TypeError(
+                'Datasets without pregenerated samples have no/infinite length.')
 
     def __getitem__(self, key):
         if self._samples is not None:
             return self._samples[key]
-        raise TypeError("The current dataset instance is not a "
-                        "pregenerated dataset hence it's not subscriptable.")
+        else:
+            raise TypeError("The current dataset instance is not a "
+                            "pregenerated dataset hence it's not subscriptable.")
 
     def __iter__(self):
         """Returns an iterator that let's you lazily loop through the dataset.
@@ -94,29 +101,48 @@ class RefGameDatasetBase(IterableDataset, ABC):
 
 
 class RefGameSamplerBase(Sampler):
+    """Basic sampler that iterates through (shuffled) indicies
+    and draws disctractors without overlap for each sample.
+    """
 
-    def __init__(self, ndistractors):
-        self.k = ndistractors
+    def __init__(self, ndistractors, nsamples, shuffle=True):
+        """Constructor.
+
+        Args:
+            - ndistractors: number of distractor indicies for each sample
+            - nsamples: total number of samples to be generated
+            - shuffle: whether to shuffle list
+        """
+        self.ndistractors = ndistractors
+        self.nsamples = nsamples
+        self.shuffle = shuffle
 
     def __iter__(self):
-        indices = []
+        """Should return a list of sampled indices.
+        Each element of this list should contain as a tuple first element the
+        target index of the sample in the dataset while the other indices
+        should point to other random samples representing distractors.
+        """
+        indices = np.empty((self.nsamples, self.ndistractors + 1))
+        targets = list(range(self.nsamples))
 
         if self.shuffle:
-            targets = torch.randperm(self.n).tolist()
-        else:
-            targets = list(range(self.n))
+            np.random.shuffle(targets)
 
-        for t in targets:
-            arr = np.zeros(self.k + 1, dtype=int)  # distractors + target
-            arr[0] = t
-            distractors = random.sample(range(self.n), self.k)
-            while t in distractors:
-                distractors = random.sample(range(self.n), self.k)
-            arr[1:] = np.array(distractors)
+        indices[:, 0] = targets
 
-            indices.append(arr)
+        for row in indices:
+            distractors = random.sample(targets, self.ndistractors)
+
+            # If we assume that a the number of distractors is way lower
+            # than the number of samples/batch size, it's always more
+            # convenient to re-sample than working with the full array
+            # of indices.
+            while row[0] in distractors:
+                distractors = random.sample(targets, self.ndistractors)
+            row[1:] = distractors
 
         return iter(indices)
 
     def __len__(self):
-        return self.n
+        return self.nsamples
