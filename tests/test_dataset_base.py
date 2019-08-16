@@ -114,8 +114,8 @@ class RefGameDatasetImplTestBase(RefGameDatasetTestBase):
 class TestRefGameSamplerBase:
 
     def test_len(self):
-        fewer_sampler = RefGameSamplerBase(0, nsamples=5)
-        more_sampler = RefGameSamplerBase(0, nsamples=15)
+        fewer_sampler = RefGameSamplerBase(0, 5)
+        more_sampler = RefGameSamplerBase(0, 15)
 
         assert len(fewer_sampler) == 5
         assert len(more_sampler) == 15

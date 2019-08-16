@@ -6,6 +6,7 @@ to be specialized (inherited).
 
 from abc import ABC
 from abc import abstractmethod
+import random
 
 from torch.utils.data import DataLoader
 from torch.utils.data import IterableDataset
@@ -104,39 +105,42 @@ class RefGameSamplerBase(Sampler):
     and draws disctractors without overlap for each sample.
     """
 
-    def __init__(self, ndistractors, nsamples, shuffle=False):
+    def __init__(self, ndistractors, nsamples, shuffle=True):
         """Constructor.
 
         Args:
-            - ndistractors: number of disctractor indicies for each sample
+            - ndistractors: number of distractor indicies for each sample
             - nsamples: total number of samples to be generated
-            - shuffle: wether to shuffle list
+            - shuffle: whether to shuffle list
         """
         self.ndistractors = ndistractors
         self.nsamples = nsamples
         self.shuffle = shuffle
 
     def __iter__(self):
-        indices = []
+        """Should return a list of sampled indices.
+        Each element of this list should contain as a tuple first element the
+        target index of the sample in the dataset while the other indices
+        should point to other random samples representing distractors.
+        """
+        indices = np.empty((self.nsamples, self.ndistractors + 1))
+        targets = list(range(self.nsamples))
 
         if self.shuffle:
-            targets = torch.randperm(self.n).tolist()
-        else:
-            targets = list(range(self.nsamples))
+            np.random.shuffle(targets)
 
-        for t in targets:
-            # target + distractors
-            arr = np.zeros(self.ndistractors + 1, dtype=int)
-            arr[0] = t
+        indices[:, 0] = targets
 
-            choices = list(range(self.nsamples))
-            choices.remove(t)
-            distractors = np.random.choice(choices,
-                                           size=self.ndistractors,
-                                           replace=False)
-            arr[1:] = distractors
+        for row in indices:
+            distractors = random.sample(targets, self.ndistractors)
 
-            indices.append(arr)
+            # If we assume that a the number of distractors is way lower
+            # than the number of samples/batch size, it's always more
+            # convenient to re-sample than working with the full array
+            # of indices.
+            while row[0] in distractors:
+                distractors = random.sample(targets, self.ndistractors)
+            row[1:] = distractors
 
         return iter(indices)
 
